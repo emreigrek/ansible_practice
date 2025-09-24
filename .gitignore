@@ -1,0 +1,5 @@
+# SSH Keys klasörünü ignore et
+ssh-keys/
+*.pem
+*.key
+id_rsa*
