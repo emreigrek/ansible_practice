@@ -1,0 +1,33 @@
+all:
+  children:
+    test_servers:
+      hosts:
+        alma-node:
+          ansible_host: localhost
+          ansible_port: 2221
+        debian-node:
+          ansible_host: localhost
+          ansible_port: 2222
+        suse-node:
+          ansible_host: localhost
+          ansible_port: 2223
+        rocky-node:
+          ansible_host: localhost
+          ansible_port: 2224
+      vars:
+        ansible_user: ansible
+        ansible_ssh_private_key_file: ./ssh-keys/id_rsa
+        ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
+    
+    redhat_family:
+      hosts:
+        alma-node:
+        rocky-node:
+    
+    debian_family:
+      hosts:
+        debian-node:
+    
+    suse_family:
+      hosts:
+        suse-node:

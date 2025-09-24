@@ -1,0 +1,201 @@
+version: '3.8'
+
+services:
+  alma-node:
+    image: almalinux:9
+    container_name: ansible-alma
+    hostname: alma-node
+    networks:
+      - ansible-net
+    ports:
+      - "2221:22"
+    volumes:
+      - ./ssh-keys:/tmp/ssh-keys:ro
+    command: >
+      bash -c "
+        dnf update -y &&
+        dnf install -y openssh-server sudo python3 procps-ng &&
+        
+        # SSH gerekli dizinleri oluştur
+        mkdir -p /var/run/sshd /run/sshd &&
+        
+        # Kullanıcı oluştur (varsa devam et)
+        if ! id -u ansible &>/dev/null; then
+          useradd -m -s /bin/bash ansible
+        fi &&
+        echo 'ansible:ansible123' | chpasswd &&
+        echo 'ansible ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers &&
+        
+        # SSH anahtarlarını ayarla
+        mkdir -p /home/ansible/.ssh &&
+        if [ -f /tmp/ssh-keys/id_rsa.pub ]; then
+          cp /tmp/ssh-keys/id_rsa.pub /home/ansible/.ssh/authorized_keys &&
+          chown -R ansible:ansible /home/ansible/.ssh &&
+          chmod 700 /home/ansible/.ssh &&
+          chmod 600 /home/ansible/.ssh/authorized_keys &&
+          echo 'SSH key configured for alma-node'
+        fi &&
+        
+        # SSH host anahtarları oluştur
+        ssh-keygen -A &&
+        
+        # SSH config ayarla
+        echo 'PermitRootLogin yes' >> /etc/ssh/sshd_config &&
+        echo 'PasswordAuthentication yes' >> /etc/ssh/sshd_config &&
+        echo 'PubkeyAuthentication yes' >> /etc/ssh/sshd_config &&
+        
+        echo 'Starting SSH daemon for alma-node...' &&
+        /usr/sbin/sshd -D -e
+      "
+    restart: unless-stopped
+
+  debian-node:
+    image: debian:12
+    container_name: ansible-debian
+    hostname: debian-node
+    networks:
+      - ansible-net
+    ports:
+      - "2222:22"
+    volumes:
+      - ./ssh-keys:/tmp/ssh-keys:ro
+    command: >
+      bash -c "
+        apt-get update &&
+        apt-get install -y openssh-server sudo python3 procps &&
+        
+        # SSH gerekli dizinleri oluştur
+        mkdir -p /var/run/sshd /run/sshd &&
+        
+        # Kullanıcı oluştur (varsa devam et)
+        if ! id -u ansible &>/dev/null; then
+          useradd -m -s /bin/bash ansible
+        fi &&
+        echo 'ansible:ansible123' | chpasswd &&
+        echo 'ansible ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers &&
+        
+        # SSH anahtarlarını ayarla
+        mkdir -p /home/ansible/.ssh &&
+        if [ -f /tmp/ssh-keys/id_rsa.pub ]; then
+          cp /tmp/ssh-keys/id_rsa.pub /home/ansible/.ssh/authorized_keys &&
+          chown -R ansible:ansible /home/ansible/.ssh &&
+          chmod 700 /home/ansible/.ssh &&
+          chmod 600 /home/ansible/.ssh/authorized_keys &&
+          echo 'SSH key configured for debian-node'
+        fi &&
+        
+        # SSH host anahtarları oluştur
+        ssh-keygen -A &&
+        
+        # SSH config ayarla
+        echo 'PermitRootLogin yes' >> /etc/ssh/sshd_config &&
+        echo 'PasswordAuthentication yes' >> /etc/ssh/sshd_config &&
+        echo 'PubkeyAuthentication yes' >> /etc/ssh/sshd_config &&
+        
+        echo 'Starting SSH daemon for debian-node...' &&
+        /usr/sbin/sshd -D -e
+      "
+    restart: unless-stopped
+
+  suse-node:
+    image: opensuse/leap:15.5
+    container_name: ansible-suse
+    hostname: suse-node
+    networks:
+      - ansible-net
+    ports:
+      - "2223:22"
+    volumes:
+      - ./ssh-keys:/tmp/ssh-keys:ro
+    command: >
+      bash -c "
+        zypper refresh &&
+        zypper install -y openssh sudo python3 procps &&
+        
+        # SSH gerekli dizinleri oluştur
+        mkdir -p /var/run/sshd /run/sshd &&
+        
+        # Kullanıcı ve grup oluştur (varsa devam et)
+        if ! id -u ansible &>/dev/null; then
+          useradd -m -s /bin/bash ansible
+        fi &&
+        echo 'ansible:ansible123' | chpasswd &&
+        echo 'ansible ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers &&
+        
+        # SSH anahtarlarını ayarla
+        mkdir -p /home/ansible/.ssh &&
+        if [ -f /tmp/ssh-keys/id_rsa.pub ]; then
+          cp /tmp/ssh-keys/id_rsa.pub /home/ansible/.ssh/authorized_keys &&
+          chown -R ansible:users /home/ansible/.ssh &&
+          chmod 700 /home/ansible/.ssh &&
+          chmod 600 /home/ansible/.ssh/authorized_keys &&
+          echo 'SSH key configured for suse-node'
+        fi &&
+        
+        # SSH host anahtarları oluştur
+        ssh-keygen -A &&
+        
+        # SSH config ayarla
+        echo 'PermitRootLogin yes' >> /etc/ssh/sshd_config &&
+        echo 'PasswordAuthentication yes' >> /etc/ssh/sshd_config &&
+        echo 'PubkeyAuthentication yes' >> /etc/ssh/sshd_config &&
+        
+        echo 'Starting SSH daemon for suse-node...' &&
+        /usr/sbin/sshd -D -e
+      "
+    restart: unless-stopped
+
+  rocky-node:
+    image: rockylinux:9
+    container_name: ansible-rocky
+    hostname: rocky-node
+    networks:
+      - ansible-net
+    ports:
+      - "2224:22"
+    volumes:
+      - ./ssh-keys:/tmp/ssh-keys:ro
+    command: >
+      bash -c "
+        dnf update -y &&
+        dnf install -y openssh-server sudo python3 procps-ng &&
+        
+        # SSH gerekli dizinleri oluştur
+        mkdir -p /var/run/sshd /run/sshd &&
+        
+        # Kullanıcı oluştur (varsa devam et)
+        if ! id -u ansible &>/dev/null; then
+          useradd -m -s /bin/bash ansible
+        fi &&
+        echo 'ansible:ansible123' | chpasswd &&
+        echo 'ansible ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers &&
+        
+        # SSH anahtarlarını ayarla
+        mkdir -p /home/ansible/.ssh &&
+        if [ -f /tmp/ssh-keys/id_rsa.pub ]; then
+          cp /tmp/ssh-keys/id_rsa.pub /home/ansible/.ssh/authorized_keys &&
+          chown -R ansible:ansible /home/ansible/.ssh &&
+          chmod 700 /home/ansible/.ssh &&
+          chmod 600 /home/ansible/.ssh/authorized_keys &&
+          echo 'SSH key configured for rocky-node'
+        fi &&
+        
+        # SSH host anahtarları oluştur
+        ssh-keygen -A &&
+        
+        # SSH config ayarla
+        echo 'PermitRootLogin yes' >> /etc/ssh/sshd_config &&
+        echo 'PasswordAuthentication yes' >> /etc/ssh/sshd_config &&
+        echo 'PubkeyAuthentication yes' >> /etc/ssh/sshd_config &&
+        
+        echo 'Starting SSH daemon for rocky-node...' &&
+        /usr/sbin/sshd -D -e
+      "
+    restart: unless-stopped
+
+networks:
+  ansible-net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

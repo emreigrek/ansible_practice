@@ -1,0 +1,29 @@
+- name: Log Analizi Testleri  
+  hosts: all
+  become: yes
+  tasks:
+    - name: SSH log kontrolü
+      shell: |
+        for logfile in /var/log/auth.log /var/log/secure /var/log/messages; do
+          if [ -f "$logfile" ]; then
+            echo "=== $logfile ===" 
+            tail -3 "$logfile" 2>/dev/null | grep -i ssh || echo "No SSH logs found"
+            break
+          fi
+        done
+      register: ssh_logs
+      failed_when: false
+      
+    - name: Sistem uptime detayları
+      shell: |
+        echo "Uptime: $(uptime)"
+        echo "Boot time: $(who -b 2>/dev/null || echo 'N/A')"
+        echo "Current users: $(who | wc -l)"
+      register: system_uptime
+      
+    - name: Log sonuçlarını göster
+      debug:
+        msg: |
+          === {{ inventory_hostname }} Logs ===
+          SSH Logs: {{ ssh_logs.stdout_lines | default(['N/A']) }}
+          System Info: {{ system_uptime.stdout_lines | default(['N/A']) }}

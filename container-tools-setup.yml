@@ -1,0 +1,53 @@
+- name: Container Ortamında Eksik Araçları Kur
+  hosts: all
+  become: yes
+  tasks:
+    - name: Network araçlarını kur (RedHat ailesi)
+      package:
+        name:
+          - iproute
+          - iputils
+          - net-tools
+          - util-linux
+          - procps-ng
+        state: present
+      when: ansible_os_family == "RedHat"
+      ignore_errors: yes
+
+    - name: Network araçlarını kur (Debian ailesi)  
+      package:
+        name:
+          - iproute2
+          - iputils-ping
+          - net-tools
+          - util-linux
+          - procps
+        state: present
+      when: ansible_os_family == "Debian"
+      ignore_errors: yes
+
+    - name: Network araçlarını kur (SUSE ailesi)
+      package:
+        name:
+          - iproute2
+          - iputils
+          - net-tools
+          - util-linux
+          - procps
+        state: present
+      when: ansible_os_family == "Suse"
+      ignore_errors: yes
+
+    - name: Kurulum sonrası test
+      shell: |
+        echo "=== Tool Check ==="
+        command -v ip && echo "✓ ip available" || echo "✗ ip missing"
+        command -v ping && echo "✓ ping available" || echo "✗ ping missing"  
+        command -v ss && echo "✓ ss available" || echo "✗ ss missing"
+        command -v lscpu && echo "✓ lscpu available" || echo "✗ lscpu missing"
+        echo "=== End Check ==="
+      register: tool_check
+      
+    - name: Tool kontrolü sonuçları
+      debug:
+        var: tool_check.stdout_lines

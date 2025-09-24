@@ -1,0 +1,29 @@
+---
+- name: Sistem Bilgilerini Topla
+  hosts: all
+  become: yes
+  tasks:
+    - name: Hostname bilgisini al
+      shell: "hostname || /bin/hostname || cat /etc/hostname"
+      register: hostname_result
+      
+    - name: Dağıtım bilgisini al
+      setup:
+        filter: ansible_distribution*
+      
+    - name: Uptime bilgisini al (tam path ile)
+      command: /usr/bin/uptime
+      register: uptime_result
+      failed_when: false
+      
+    - name: Uptime bilgisini al (alternatif)
+      command: cat /proc/uptime
+      register: uptime_alt
+      when: uptime_result.rc != 0
+      
+    - name: Sonuçları göster
+      debug:
+        msg: |
+          Host: {{ hostname_result.stdout }}
+          Dağıtım: {{ ansible_distribution }} {{ ansible_distribution_version }}
+          Uptime: {{ uptime_result.stdout if uptime_result.rc == 0 else 'Uptime: ' + uptime_alt.stdout + ' seconds' }}

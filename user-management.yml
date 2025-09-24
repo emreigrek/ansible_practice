@@ -1,0 +1,44 @@
+- name: Kullanıcı Yönetimi Testleri
+  hosts: all
+  become: yes
+  tasks:
+    - name: Test kullanıcısı oluştur
+      user:
+        name: testuser
+        shell: /bin/bash
+        home: /home/testuser
+        create_home: yes
+        state: present
+        
+    - name: Test dizini oluştur
+      file:
+        path: /home/testuser/ansible-test
+        state: directory
+        owner: testuser
+        mode: '0755'
+        
+    - name: Test dosyası oluştur
+      copy:
+        content: |
+          Test dosyası - {{ ansible_date_time.date }}
+          Host: {{ inventory_hostname }}
+          User: testuser
+        dest: /home/testuser/ansible-test/info.txt
+        owner: testuser
+        mode: '0644'
+        
+    - name: Kullanıcı bilgilerini kontrol et
+      shell: id testuser && ls -la /home/testuser/ansible-test/
+      register: user_info
+      
+    - name: Kullanıcı sonuçlarını göster
+      debug:
+        msg: |
+          === {{ inventory_hostname }} User Management ===
+          User Info: {{ user_info.stdout_lines }}
+          
+    - name: Test kullanıcısını kaldır (cleanup)
+      user:
+        name: testuser
+        state: absent
+        remove: yes

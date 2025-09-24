@@ -1,0 +1,35 @@
+- name: Sistem Performans Testleri
+  hosts: all
+  become: yes
+  tasks:
+    - name: CPU bilgisi
+      shell: lscpu | grep -E "^CPU\(s\)|Model name|Architecture"
+      register: cpu_info
+      failed_when: false
+      
+    - name: Memory kullanımı
+      shell: free -h
+      register: memory_info
+      
+    - name: Disk I/O testi (basit)
+      shell: dd if=/dev/zero of=/tmp/test bs=1M count=10 2>&1 | grep copied
+      register: disk_test
+      failed_when: false
+      
+    - name: Load average
+      shell: uptime | awk -F'load average:' '{print $2}'
+      register: load_avg
+      
+    - name: Temizlik
+      file:
+        path: /tmp/test
+        state: absent
+        
+    - name: Performans sonuçlarını göster
+      debug:
+        msg: |
+          === {{ inventory_hostname }} Performance ===
+          CPU: {{ cpu_info.stdout_lines | default(['N/A']) }}
+          Memory: {{ memory_info.stdout_lines | default(['N/A']) }}
+          Disk Test: {{ disk_test.stdout | default('N/A') }}
+          Load Average: {{ load_avg.stdout | default('N/A') }}

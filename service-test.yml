@@ -1,0 +1,30 @@
+- name: Servis Yönetimi Testleri
+  hosts: all
+  become: yes
+  tasks:
+    - name: SSH servis durumu
+      shell: |
+        if command -v systemctl >/dev/null; then
+          systemctl is-active ssh sshd 2>/dev/null | head -1
+        else
+          service ssh status >/dev/null 2>&1 && echo "active" || echo "inactive"
+        fi
+      register: ssh_status
+      failed_when: false
+      
+    - name: Çalışan port listesi
+      shell: ss -tlnp | grep -E ":22 |:80 |:443 " || echo "Sadece SSH portu açık"
+      register: open_ports
+      failed_when: false
+      
+    - name: Process sayısı
+      shell: ps aux | wc -l
+      register: process_count
+      
+    - name: Servis sonuçlarını göster
+      debug:
+        msg: |
+          === {{ inventory_hostname }} Services ===
+          SSH Status: {{ ssh_status.stdout | default('unknown') }}
+          Open Ports: {{ open_ports.stdout_lines | default(['N/A']) }}
+          Process Count: {{ process_count.stdout | default('N/A') }}

@@ -1,0 +1,122 @@
+version: '3.8'
+
+services:
+  alma-node:
+    image: almalinux:9
+    container_name: ansible-alma
+    hostname: alma-node
+    networks:
+      - ansible-net
+    ports:
+      - "2221:22"
+    volumes:
+      - ./ssh-keys:/tmp/ssh-keys:ro
+    command: >
+      bash -c "
+        dnf update -y &&
+        dnf install -y openssh-server sudo python3 procps-ng &&
+        mkdir -p /var/run/sshd &&
+        ssh-keygen -A &&
+        useradd -m -s /bin/bash ansible &&
+        echo 'ansible:ansible123' | chpasswd &&
+        echo 'ansible ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers &&
+        mkdir -p /home/ansible/.ssh &&
+        cp /tmp/ssh-keys/id_rsa.pub /home/ansible/.ssh/authorized_keys &&
+        chown -R ansible:ansible /home/ansible/.ssh &&
+        chmod 700 /home/ansible/.ssh &&
+        chmod 600 /home/ansible/.ssh/authorized_keys &&
+        /usr/sbin/sshd -D
+      "
+    restart: unless-stopped
+
+  debian-node:
+    image: debian:12
+    container_name: ansible-debian
+    hostname: debian-node
+    networks:
+      - ansible-net
+    ports:
+      - "2222:22"
+    volumes:
+      - ./ssh-keys:/tmp/ssh-keys:ro
+    command: >
+      bash -c "
+        apt-get update &&
+        apt-get install -y openssh-server sudo python3 &&
+        systemctl enable ssh &&
+        mkdir -p /var/run/sshd &&
+        ssh-keygen -A &&
+        useradd -m -s /bin/bash ansible &&
+        echo 'ansible:ansible123' | chpasswd &&
+        echo 'ansible ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers &&
+        mkdir -p /home/ansible/.ssh &&
+        cp /tmp/ssh-keys/id_rsa.pub /home/ansible/.ssh/authorized_keys &&
+        chown -R ansible:ansible /home/ansible/.ssh &&
+        chmod 700 /home/ansible/.ssh &&
+        chmod 600 /home/ansible/.ssh/authorized_keys &&
+        /usr/sbin/sshd -D
+      "
+    restart: unless-stopped
+
+  suse-node:
+    image: opensuse/leap:15.5
+    container_name: ansible-suse
+    hostname: suse-node
+    networks:
+      - ansible-net
+    ports:
+      - "2223:22"
+    volumes:
+      - ./ssh-keys:/tmp/ssh-keys:ro
+    command: >
+      bash -c "
+        zypper refresh &&
+        zypper install -y openssh sudo python3 procps &&
+        mkdir -p /var/run/sshd &&
+        ssh-keygen -A &&
+        useradd -m -s /bin/bash ansible &&
+        echo 'ansible:ansible123' | chpasswd &&
+        echo 'ansible ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers &&
+        mkdir -p /home/ansible/.ssh &&
+        cp /tmp/ssh-keys/id_rsa.pub /home/ansible/.ssh/authorized_keys &&
+        chown -R ansible:ansible /home/ansible/.ssh &&
+        chmod 700 /home/ansible/.ssh &&
+        chmod 600 /home/ansible/.ssh/authorized_keys &&
+        /usr/sbin/sshd -D
+      "
+    restart: unless-stopped
+
+  rocky-node:
+    image: rockylinux:9
+    container_name: ansible-rocky
+    hostname: rocky-node
+    networks:
+      - ansible-net
+    ports:
+      - "2224:22"
+    volumes:
+      - ./ssh-keys:/tmp/ssh-keys:ro
+    command: >
+      bash -c "
+        dnf update -y &&
+        dnf install -y openssh-server sudo python3 procps-ng &&
+        mkdir -p /var/run/sshd &&
+        ssh-keygen -A &&
+        useradd -m -s /bin/bash ansible &&
+        echo 'ansible:ansible123' | chpasswd &&
+        echo 'ansible ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers &&
+        mkdir -p /home/ansible/.ssh &&
+        cp /tmp/ssh-keys/id_rsa.pub /home/ansible/.ssh/authorized_keys &&
+        chown -R ansible:ansible /home/ansible/.ssh &&
+        chmod 700 /home/ansible/.ssh &&
+        chmod 600 /home/ansible/.ssh/authorized_keys &&
+        /usr/sbin/sshd -D
+      "
+    restart: unless-stopped
+
+networks:
+  ansible-net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

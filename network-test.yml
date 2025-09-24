@@ -1,0 +1,26 @@
+- name: Network Bilgileri ve Testleri
+  hosts: all
+  become: yes
+  tasks:
+    - name: IP adresi bilgisi
+      shell: ip addr show | grep -E "inet.*eth|inet.*enp" | head -5
+      register: ip_info
+      failed_when: false
+      
+    - name: DNS ayarları
+      shell: cat /etc/resolv.conf
+      register: dns_info
+      failed_when: false
+      
+    - name: Network connectivity test
+      shell: ping -c 2 8.8.8.8
+      register: connectivity_test
+      failed_when: false
+      
+    - name: Network sonuçlarını göster
+      debug:
+        msg: |
+          === {{ inventory_hostname }} Network Info ===
+          IP Addresses: {{ ip_info.stdout_lines | default(['N/A']) }}
+          DNS: {{ dns_info.stdout_lines | default(['N/A']) }}
+          Internet: {{ 'OK' if connectivity_test.rc == 0 else 'FAILED' }}
